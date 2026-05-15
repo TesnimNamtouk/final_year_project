@@ -348,7 +348,7 @@ Cold start (yeni kullanıcı):                  α=0.9, β=0.1
 2. `NearestNeighbors(metric='cosine')` ile en benzer kullanıcılar bulunur
 3. O kullanıcıların yüksek puan verdiği, hedef kullanıcının görmediği içerikler önerilir
 
-**⚠️ Kritik:** `description` alanı boşsa TF-IDF vektörü oluşturulamaz, CBF çalışmaz.
+**!!:** `description` alanı boşsa TF-IDF vektörü oluşturulamaz, CBF çalışmaz.
 Bu yüzden frontend'de her kaydetme işleminde `description` mutlaka gönderilir.
 
 ---
@@ -455,44 +455,7 @@ cd backend && npm test
 cd ml-service && pytest
 ```
 
----
 
-## 10. Çözülen Teknik Sorunlar
-
-| Sorun | Kök Neden | Çözüm |
-|-------|-----------|-------|
-| Aynı anda çok kullanıcı login → 409 P2002 hatası | Refresh token `@unique` kısıtı; aynı ms'de aynı userId → aynı token hash | `jti: randomBytes(16)` eklendi — her token kriptografik olarak benzersiz |
-| Farklı hesaplar birbirinin içeriklerini görüyor | React Query `["user-content"]` key'i userId içermiyordu, önbellek paylaşılıyordu | Logout'ta `queryClient.clear()` + tüm query key'lere `user.id` eklendi |
-| ML önerileri alakasız/zayıf | Kaydetme sırasında `description` gönderilmiyordu, TF-IDF boş vektörler üretiyordu | `SaveContentPayload`'a `description` eklendi, tüm kaydetme noktaları güncellendi |
-| Yanlış şifrede hata görünmüyor | Frontend `error.response.data.message` okuyordu, backend `{ error: string }` dönüyor | `.message` → `.error` düzeltildi (Login + Register sayfaları) |
-| Avatar tarayıcıda 404 veriyor | Vite proxy `/avatars` yolunu backend'e iletmiyordu | `vite.config.ts`'e `/avatars → http://localhost:4000` proxy eklendi |
-| PATCH profil güncellemesi çalışmıyor | Frontend `api.put()` çağırıyordu, backend `router.patch()` bekliyordu | Endpoint ve API çağrısı hizalandı |
-| ML `description` boş kalıyor | Backend userContent upsert'i `description` alanını güncellemeyi atlıyordu | `userContent.ts` upsert sorgusu description'ı da içerecek şekilde düzeltildi |
-
----
-
-## 11. Proje Durumu (15 Mayıs 2026)
-
-### Tamamlanan Özellikler ✅
-- Kullanıcı kayıt / giriş / çıkış (JWT + refresh token rotation)
-- Film, dizi, kitap arama (TMDB + Google Books)
-- İçerik detay sayfası
-- Kütüphaneye kaydetme (izledim/okudum + istek listesi)
-- 1-10 arası puanlama
-- Hibrit ML önerileri (CBF + CF)
-- Öneri geri bildirimi (beğendim/beğenmedim)
-- Onboarding (tür tercihi seçimi)
-- Profil sayfası (avatar, şifre, kişisel bilgi, tür tercihleri)
-- TR/EN çok dil desteği
-- Responsive tasarım (mobil + masaüstü)
-- Çok kullanıcı veri izolasyonu
-- Docker Compose altyapısı
-
-### Test Edilmesi Gereken ⚠️
-- Avatar yükleme uçtan uca testi
-- Şifre değiştirme akışı
-- Profil düzenleme (username/email/phone)
-- ML öneri kalitesi (description ile)
 
 ---
 
