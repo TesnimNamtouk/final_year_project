@@ -1,0 +1,503 @@
+openapi: "3.0.3"
+
+info:
+  title: ContentAI API
+  description: AI-powered content recommendation platform API
+  version: "1.0.0"
+  contact:
+    email: admin@contentai.dev
+
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+
+    SuccessResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+        message:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Content:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [movie, series, book]
+        description:
+          type: string
+        genres:
+          type: array
+          items:
+            type: string
+        posterUrl:
+          type: string
+        externalId:
+          type: string
+
+    UserContent:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        contentId:
+          type: integer
+        rating:
+          type: number
+          minimum: 1
+          maximum: 10
+        status:
+          type: string
+          enum: [watched, want, reading, read]
+
+    Recommendation:
+      type: object
+      properties:
+        contentId:
+          type: integer
+        score:
+          type: number
+        algorithm:
+          type: string
+          enum: [hybrid, cbf, cf]
+        content:
+          $ref: "#/components/schemas/Content"
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, username]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: "securePassword123"
+                username:
+                  type: string
+                  minLength: 3
+                  example: johndoe
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+                  accessToken:
+                    type: string
+                  message:
+                    type: string
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/login:
+    post:
+      summary: Login with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  example: "securePassword123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+                  accessToken:
+                    type: string
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/me:
+    get:
+      summary: Get currently authenticated user
+      tags: [Auth]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/users/{id}:
+    put:
+      summary: Update user profile
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/users/{id}/onboarding:
+    post:
+      summary: Save user onboarding preferences
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [genres, content_ids]
+              properties:
+                genres:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Action", "Drama", "Sci-Fi"]
+                content_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 5, 12]
+      responses:
+        "200":
+          description: Onboarding saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/content/search:
+    get:
+      summary: Search content by query and type
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query string
+          example: "Inception"
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [movie, series, book]
+          description: Filter by content type
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Content"
+        "400":
+          description: Missing query parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/user-content:
+    post:
+      summary: Add or update a content entry for a user
+      tags: [UserContent]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content_id]
+              properties:
+                content_id:
+                  type: integer
+                  example: 42
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 10
+                  example: 8
+                status:
+                  type: string
+                  enum: [watched, want, reading, read]
+                  example: watched
+      responses:
+        "201":
+          description: UserContent entry created or updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserContent"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/user-content/{id}:
+    delete:
+      summary: Remove a user content entry
+      tags: [UserContent]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Entry deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/recommendations:
+    get:
+      summary: Get personalized recommendations for the authenticated user
+      tags: [Recommendations]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: List of recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Recommendation"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/recommendations/{id}/feedback:
+    post:
+      summary: Submit feedback on a recommendation
+      tags: [Recommendations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Recommendation ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [liked]
+              properties:
+                liked:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: Feedback recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Recommendation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Users
+    description: User profile and onboarding
+  - name: Content
+    description: Content search and details
+  - name: UserContent
+    description: User's personal content library
+  - name: Recommendations
+    description: AI-powered recommendations

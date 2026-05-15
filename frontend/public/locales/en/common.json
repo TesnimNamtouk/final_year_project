@@ -1,0 +1,26 @@
+{
+  "nav": { "home": "Home", "search": "Search", "profile": "Profile", "logout": "Logout" },
+  "auth": {
+    "login": "Login", "register": "Register", "email": "Email", "password": "Password",
+    "username": "Username", "loginTitle": "Welcome Back", "registerTitle": "Create Account",
+    "noAccount": "Don't have an account?", "hasAccount": "Already have an account?"
+  },
+  "content": {
+    "movie": "Movie", "series": "Series", "book": "Book", "save": "Save", "saved": "Saved",
+    "rate": "Rate", "watched": "Watched", "wantToWatch": "Want to Watch",
+    "reading": "Reading", "read": "Read", "wantToRead": "Want to Read", "searchPlaceholder": "Search movies, series or books...",
+    "remove": "Remove", "director": "Director", "cast": "Cast", "network": "Network",
+    "loadError": "Could not load content."
+  },
+  "recommendations": { "title": "Recommendations", "noRecommendations": "No recommendations yet. Save some content!", "loading": "Preparing recommendations..." },
+  "onboarding": {
+    "title": "Set Your Preferences", "subtitle": "Choose some preferences for personalized recommendations",
+    "selectGenres": "Select genres you like", "selectContent": "Add some content (optional)",
+    "continue": "Continue", "skip": "Skip"
+  },
+  "profile": {
+    "genrePrefs": "Genre Preferences", "genreHint": "Select genres you like — the recommendation algorithm uses these preferences.",
+    "emptyList": "No content in this list yet.", "delete": "Delete", "prefsSaved": "Preferences saved! Refreshing recommendations..."
+  },
+  "common": { "loading": "Loading...", "error": "An error occurred", "retry": "Retry", "save": "Save", "cancel": "Cancel", "all": "All" }
+}

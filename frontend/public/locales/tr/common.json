@@ -1,0 +1,26 @@
+{
+  "nav": { "home": "Ana Sayfa", "search": "Ara", "profile": "Profil", "logout": "Çıkış" },
+  "auth": {
+    "login": "Giriş Yap", "register": "Kayıt Ol", "email": "E-posta", "password": "Şifre",
+    "username": "Kullanıcı Adı", "loginTitle": "Hoş Geldiniz", "registerTitle": "Hesap Oluştur",
+    "noAccount": "Hesabınız yok mu?", "hasAccount": "Zaten hesabınız var mı?"
+  },
+  "content": {
+    "movie": "Film", "series": "Dizi", "book": "Kitap", "save": "Kaydet", "saved": "Kaydedildi",
+    "rate": "Puan Ver", "watched": "İzlendi", "wantToWatch": "İzlemek İstiyorum",
+    "reading": "Okunuyor", "read": "Okundu", "wantToRead": "Okumak İstiyorum", "searchPlaceholder": "Film, dizi veya kitap ara...",
+    "remove": "Kaldır", "director": "Yönetmen", "cast": "Oyuncular", "network": "Kanal",
+    "loadError": "İçerik yüklenemedi."
+  },
+  "recommendations": { "title": "Öneriler", "noRecommendations": "Henüz öneri yok. İçerik kaydedin!", "loading": "Öneriler hazırlanıyor..." },
+  "onboarding": {
+    "title": "Zevklerinizi Belirleyin", "subtitle": "Size özel öneriler için birkaç tercih seçin",
+    "selectGenres": "Sevdiğiniz türleri seçin", "selectContent": "Birkaç içerik ekleyin (isteğe bağlı)",
+    "continue": "Devam Et", "skip": "Atla"
+  },
+  "profile": {
+    "genrePrefs": "Tür Tercihlerim", "genreHint": "Beğendiğin türleri seç — öneri algoritması bu tercihleri kullanır.",
+    "emptyList": "Bu listede henüz içerik yok.", "delete": "Sil", "prefsSaved": "Tercihler kaydedildi! Öneriler yenileniyor..."
+  },
+  "common": { "loading": "Yükleniyor...", "error": "Bir hata oluştu", "retry": "Tekrar Dene", "save": "Kaydet", "cancel": "İptal", "all": "Tümü" }
+}

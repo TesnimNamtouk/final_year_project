@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pycache
+
+# Uploaded files (user avatars)
+backend/public/avatars/*
+!backend/public/avatars/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# Prisma generated
+backend/node_modules/
+
+# Dev config (local tool settings)
+.devconfig/
