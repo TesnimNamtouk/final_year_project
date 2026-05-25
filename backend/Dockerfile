@@ -4,10 +4,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production
+RUN npm ci
 
 COPY . .
 
+RUN npm run build && npx prisma generate
+
 EXPOSE 4000
 
-CMD ["npx", "ts-node", "src/index.ts"]
+CMD ["node", "dist/index.js"]

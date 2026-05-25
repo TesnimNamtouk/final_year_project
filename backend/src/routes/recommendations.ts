@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { logActivity } from '../lib/activityLogger';
 
 const router = Router();
 
@@ -33,18 +34,21 @@ router.get(
           select: { preferredGenres: true },
         });
 
+        const startMs = Date.now();
         const mlRes = await axios.post(
           `${ML_SERVICE_URL}/recommend`,
           { user_id: userId, preferred_genres: userPref?.preferredGenres ?? [], top_n: 60 },
           { timeout: 10000 }
         );
+        const executionMs = Date.now() - startMs;
 
-        const mlItems = mlRes.data as Array<{
+        const mlData = mlRes.data as { algorithm: string; recommendations: Array<{
           content_id: number;
           hybrid_score: number;
           cbf_score: number;
           cf_score: number;
-        }>;
+        }> };
+        const mlItems = mlData.recommendations ?? (mlRes.data as Array<{ content_id: number; hybrid_score: number; cbf_score: number; cf_score: number }>);
 
         // Upsert each recommendation returned by the ML service
         const upsertOps = mlItems.map((item) =>
@@ -66,6 +70,14 @@ router.get(
           })
         );
         await Promise.all(upsertOps);
+
+        // Log recommendation session
+        const algorithm = mlData.algorithm ?? 'hybrid';
+        const isColdStart = algorithm.includes('cold_start');
+        await prisma.recommendationLog.create({
+          data: { userId, algorithm, itemCount: mlItems.length, executionMs, isColdStart },
+        });
+        logActivity({ userId, action: 'get_recommendations', metadata: { algorithm, itemCount: mlItems.length } });
       } catch {
         // ML service is unreachable – fall back to DB data silently
       }
@@ -124,6 +136,8 @@ router.post(
         where: { id },
         data: { liked },
       });
+
+      logActivity({ userId, action: 'feedback_recommendation', entityType: 'recommendation', entityId: id, metadata: { liked } });
 
       res.json({ data: updated });
     } catch (err) {

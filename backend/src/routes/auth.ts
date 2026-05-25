@@ -9,6 +9,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from '../utils/jwt';
+import { logActivity } from '../lib/activityLogger';
 
 const router = Router();
 
@@ -70,6 +71,8 @@ router.post(
       const accessToken = generateAccessToken({ userId: user.id, email: user.email });
       const refreshToken = await persistRefreshToken(user.id);
 
+      logActivity({ userId: user.id, action: 'register' });
+
       setRefreshCookie(res, refreshToken);
       res.status(201).json({ data: { user, accessToken } });
     } catch (err) {
@@ -104,6 +107,8 @@ router.post(
 
       const accessToken = generateAccessToken({ userId: user.id, email: user.email });
       const refreshToken = await persistRefreshToken(user.id);
+
+      logActivity({ userId: user.id, action: 'login' });
 
       setRefreshCookie(res, refreshToken);
 
@@ -201,7 +206,9 @@ router.post(
       const token: string | undefined = req.cookies?.refreshToken;
 
       if (token) {
+        const stored = await prisma.refreshToken.findUnique({ where: { token }, select: { userId: true } });
         await prisma.refreshToken.deleteMany({ where: { token } });
+        if (stored) logActivity({ userId: stored.userId, action: 'logout' });
       }
 
       res.clearCookie('refreshToken');

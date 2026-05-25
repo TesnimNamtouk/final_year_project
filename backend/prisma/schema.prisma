@@ -3,77 +3,64 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique
-  passwordHash String    @map("password_hash")
-  username     String    @unique
-  language     String    @default("tr")
-  phone        String?
-  avatarUrl    String?   @map("avatar_url")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-
-  userContents    UserContent[]
-  preferences     UserPreference?
-  recommendations Recommendation[]
-  refreshTokens   RefreshToken[]
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  passwordHash    String           @map("password_hash")
+  username        String           @unique
+  language        String           @default("tr")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  avatarUrl       String?          @map("avatar_url")
+  phone           String?
+  recommendations    Recommendation[]
+  refreshTokens      RefreshToken[]
+  userContents       UserContent[]
+  preferences        UserPreference?
+  activityLogs       ActivityLog[]
+  recommendationLogs RecommendationLog[]
 
   @@map("users")
 }
 
 model Content {
-  id          Int         @id @default(autoincrement())
-  externalId  String      @map("external_id")
-  type        ContentType
-  title       String
-  titleEn     String?     @map("title_en")
-  description String?     @db.Text
-  genres      String[]
-  year        Int?
-  posterUrl   String?     @map("poster_url")
-  rating      Float?
-  metadata    Json?
-  createdAt   DateTime    @default(now()) @map("created_at")
-
-  userContents    UserContent[]
+  id              Int              @id @default(autoincrement())
+  externalId      String           @map("external_id")
+  type            ContentType
+  title           String
+  titleEn         String?          @map("title_en")
+  description     String?
+  genres          String[]
+  year            Int?
+  posterUrl       String?          @map("poster_url")
+  rating          Float?
+  metadata        Json?
+  createdAt       DateTime         @default(now()) @map("created_at")
   recommendations Recommendation[]
+  userContents    UserContent[]
 
   @@unique([externalId, type])
   @@map("content")
-}
-
-enum ContentType {
-  movie
-  series
-  book
 }
 
 model UserContent {
   id        Int           @id @default(autoincrement())
   userId    Int           @map("user_id")
   contentId Int           @map("content_id")
-  rating    Int? // 1-10
+  rating    Int?
   status    ContentStatus @default(watched)
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  content   Content       @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, contentId])
   @@map("user_content")
-}
-
-enum ContentStatus {
-  watched
-  want
-  reading
-  read
 }
 
 model UserPreference {
@@ -83,8 +70,7 @@ model UserPreference {
   onboardingDone  Boolean  @default(false) @map("onboarding_done")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_preferences")
 }
@@ -98,9 +84,8 @@ model Recommendation {
   cfScore     Float    @map("cf_score")
   liked       Boolean?
   generatedAt DateTime @default(now()) @map("generated_at")
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, contentId])
   @@map("recommendations")
@@ -112,8 +97,74 @@ model RefreshToken {
   token     String   @unique
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+enum ContentType {
+  movie
+  series
+  book
+}
+
+enum ContentStatus {
+  watched
+  want
+  reading
+  read
+}
+
+enum ActivityAction {
+  register
+  login
+  logout
+  search
+  view_content
+  rate_content
+  add_to_list
+  remove_from_list
+  get_recommendations
+  feedback_recommendation
+  update_preferences
+}
+
+model ActivityLog {
+  id         Int            @id @default(autoincrement())
+  userId     Int?           @map("user_id")
+  action     ActivityAction
+  entityType String?        @map("entity_type")
+  entityId   Int?           @map("entity_id")
+  metadata   Json?
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("activity_logs")
+}
+
+model RecommendationLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  algorithm   String
+  itemCount   Int      @map("item_count")
+  executionMs Int?     @map("execution_ms")
+  isColdStart Boolean  @default(false) @map("is_cold_start")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("refresh_tokens")
+  @@map("recommendation_logs")
+}
+
+model MLModelMetric {
+  id          Int      @id @default(autoincrement())
+  modelType   String   @map("model_type")
+  metricName  String   @map("metric_name")
+  metricValue Float    @map("metric_value")
+  userCount   Int?     @map("user_count")
+  itemCount   Int?     @map("item_count")
+  recordedAt  DateTime @default(now()) @map("recorded_at")
+
+  @@map("ml_model_metrics")
 }

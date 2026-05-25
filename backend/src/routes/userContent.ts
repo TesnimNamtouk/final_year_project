@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { ContentType, ContentStatus } from '@prisma/client';
+import { logActivity } from '../lib/activityLogger';
 
 const router = Router();
 
@@ -83,6 +84,8 @@ router.post(
         include: { content: true },
       });
 
+      logActivity({ userId, action: 'add_to_list', entityType: 'content', entityId: content.id, metadata: { status, rating } });
+
       res.status(201).json({ data: userContent });
     } catch (err) {
       next(err);
@@ -159,6 +162,8 @@ router.patch(
         include: { content: true },
       });
 
+      if (rating !== undefined) logActivity({ userId, action: 'rate_content', entityType: 'content', entityId: existing.contentId, metadata: { rating } });
+
       res.json({ data: updated });
     } catch (err) {
       next(err);
@@ -186,6 +191,8 @@ router.delete(
       }
 
       await prisma.userContent.delete({ where: { id } });
+      logActivity({ userId, action: 'remove_from_list', entityType: 'content', entityId: existing.contentId });
+
       res.status(204).send();
     } catch (err) {
       next(err);
