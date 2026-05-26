@@ -94,32 +94,59 @@ router.get(
         return;
       }
 
-      let results: unknown[];
+      // Search local DB first (supports Turkish titles)
+      const dbMatches = await prisma.content.findMany({
+        where: {
+          OR: [
+            { title: { contains: q, mode: 'insensitive' } },
+            { titleEn: { contains: q, mode: 'insensitive' } },
+          ],
+          ...(resolvedType !== 'all' ? { type: resolvedType as ContentType } : {}),
+        },
+        take: 20,
+        orderBy: { rating: 'desc' },
+      });
+
+      const dbResults = dbMatches.map((c) => ({
+        id: c.externalId,
+        title: c.title,
+        type: c.type,
+        year: c.year ?? undefined,
+        genres: c.genres,
+        posterUrl: c.posterUrl ?? undefined,
+        rating: c.rating ?? undefined,
+        description: c.description ?? undefined,
+      }));
+
+      let apiResults: unknown[] = [];
 
       if (resolvedType === 'movie') {
-        results = await searchMovies(q);
-        if (results.length === 0 && !process.env.OMDB_API_KEY) {
-          res.status(503).json({ error: 'Film araması için OMDB_API_KEY gerekli. omdbapi.com adresinden ücretsiz alabilirsiniz.' });
-          return;
-        }
+        apiResults = await searchMovies(q);
       } else if (resolvedType === 'series') {
-        results = await searchSeries(q);
+        apiResults = await searchSeries(q);
       } else if (resolvedType === 'book') {
-        results = await searchBooks(q);
+        apiResults = await searchBooks(q);
       } else {
         const [movies, series, books] = await Promise.allSettled([
           searchMovies(q),
           searchSeries(q),
           searchBooks(q),
         ]);
-        results = [
+        apiResults = [
           ...(movies.status === 'fulfilled' ? movies.value : []),
           ...(series.status === 'fulfilled' ? series.value : []),
           ...(books.status === 'fulfilled' ? books.value : []),
         ];
       }
 
-      res.json({ data: results });
+      // Merge: DB results first, then API results (skip duplicates by externalId)
+      const dbExternalIds = new Set(dbResults.map((r) => r.id));
+      const merged = [
+        ...dbResults,
+        ...(apiResults as { id: string }[]).filter((r) => !dbExternalIds.has(r.id)),
+      ];
+
+      res.json({ data: merged });
     } catch (err) {
       next(err);
     }

@@ -3,8 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Checkbox,
-  FormControlLabel,
   Grid,
   Paper,
   Stepper,
@@ -152,9 +150,10 @@ export default function OnboardingPage() {
                   <Paper
                     variant="outlined"
                     sx={{
-                      p: 1,
+                      p: 1.5,
                       textAlign: "center",
                       cursor: "pointer",
+                      userSelect: "none",
                       bgcolor: selectedGenres.includes(genre)
                         ? "primary.light"
                         : "background.paper",
@@ -172,17 +171,9 @@ export default function OnboardingPage() {
                     }}
                     onClick={() => toggleGenre(genre)}
                   >
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={selectedGenres.includes(genre)}
-                          size="small"
-                          sx={{ display: "none" }}
-                        />
-                      }
-                      label={genre}
-                      sx={{ m: 0, cursor: "pointer" }}
-                    />
+                    <Typography variant="body2" fontWeight={selectedGenres.includes(genre) ? 700 : 400}>
+                      {genre}
+                    </Typography>
                   </Paper>
                 </Grid>
               ))}
