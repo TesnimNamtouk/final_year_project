@@ -375,7 +375,8 @@ export default function ProfilePage() {
                     <Box sx={{ position: "relative" }}>
                       <ContentCard
                         content={toContentItem(item)}
-                        isSaved
+                        isSaved={item.status === "watched" || item.status === "read"}
+                        isWanted={item.status === "want" || item.status === "reading"}
                         onRate={(c) => setRatingTarget(c)}
                       />
                       <Tooltip title={t("profile.delete")}>

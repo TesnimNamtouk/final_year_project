@@ -197,23 +197,23 @@ export default function ContentCard({
 
       <CardActions sx={{ justifyContent: "space-between", px: 2, pt: 0.5, pb: 1 }}>
         <Box sx={{ display: "flex", gap: 0.5 }}>
-          <Tooltip title={isSaved ? t("content.saved") : t("content.save")}>
-            <IconButton
-              size="small"
-              color={isSaved ? "error" : "default"}
-              onClick={(e) => { e.stopPropagation(); onSave?.(content); }}
-            >
-              {isSaved ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-
           <Tooltip title={content.type === "book" ? t("content.wantToRead") : t("content.wantToWatch")}>
             <IconButton
               size="small"
-              color={isWanted ? "primary" : "default"}
+              color={isWanted ? "error" : "default"}
               onClick={(e) => { e.stopPropagation(); onWant?.(content); }}
             >
-              {isWanted ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+              {isWanted ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={isSaved ? t("content.saved") : t("content.save")}>
+            <IconButton
+              size="small"
+              color={isSaved ? "primary" : "default"}
+              onClick={(e) => { e.stopPropagation(); onSave?.(content); }}
+            >
+              {isSaved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
         </Box>
