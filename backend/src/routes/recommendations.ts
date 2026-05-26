@@ -38,7 +38,7 @@ router.get(
         const mlRes = await axios.post(
           `${ML_SERVICE_URL}/recommend`,
           { user_id: userId, preferred_genres: userPref?.preferredGenres ?? [], top_n: 60 },
-          { timeout: 10000 }
+          { timeout: 60000 }
         );
         const executionMs = Date.now() - startMs;
 
