@@ -35,6 +35,7 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
   if (isLoading) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" replace />;
+  if (user.isAdmin) return <Navigate to="/admin" replace />;
   if (!user.onboardingDone && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }

@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   const redirectIfOnboardingPending = (u: AuthUser) => {
+    if (u.isAdmin) {
+      navigate('/admin', { replace: true });
+      return;
+    }
     if (!u.onboardingDone && location.pathname !== '/onboarding') {
       navigate('/onboarding', { replace: true });
     }
