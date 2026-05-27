@@ -2,6 +2,14 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { authAPI } from '../services/api';
+import i18n from 'i18next';
+
+function applyLanguage(lang: string) {
+  if (lang && lang !== i18n.language) {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('language', lang);
+  }
+}
 
 export interface AuthUser {
   id: number;
@@ -54,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         const u: AuthUser = data.data;
         setUser(u);
+        applyLanguage(u.language ?? 'tr');
         redirectIfOnboardingPending(u);
       })
       .catch(() => {
@@ -73,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const meRes = await authAPI.me();
     const u: AuthUser = meRes.data.data;
     setUser(u);
+    applyLanguage(u.language ?? 'tr');
     redirectIfOnboardingPending(u);
   };
 
@@ -86,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const meRes = await authAPI.me();
     const u: AuthUser = meRes.data.data;
     setUser(u);
+    applyLanguage(u.language ?? 'tr');
     redirectIfOnboardingPending(u);
   };
 
