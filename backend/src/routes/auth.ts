@@ -10,6 +10,7 @@ import {
   verifyRefreshToken,
 } from '../utils/jwt';
 import { logActivity } from '../lib/activityLogger';
+import { systemLog } from '../lib/systemLogger';
 
 const router = Router();
 
@@ -72,6 +73,12 @@ router.post(
       const refreshToken = await persistRefreshToken(user.id);
 
       logActivity({ userId: user.id, action: 'register' });
+      systemLog({
+        userId: user.id,
+        category: 'USER_ACTION',
+        message: `Yeni kullanıcı kaydı: ${username} (${email}). Şifre bcrypt ile hash'lendi (cost=12).`,
+        details: { username, email },
+      });
 
       setRefreshCookie(res, refreshToken);
       res.status(201).json({ data: { user, accessToken } });
@@ -109,6 +116,12 @@ router.post(
       const refreshToken = await persistRefreshToken(user.id);
 
       logActivity({ userId: user.id, action: 'login' });
+      systemLog({
+        userId: user.id,
+        category: 'USER_ACTION',
+        message: `Kullanıcı ${user.username} (${user.email}) giriş yaptı. JWT access token ve refresh token üretildi.`,
+        details: { email: user.email },
+      });
 
       setRefreshCookie(res, refreshToken);
 

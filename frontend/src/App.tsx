@@ -12,6 +12,7 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const ContentDetailPage = lazy(() => import("./pages/ContentDetailPage"));
+const LogsPage = lazy(() => import("./pages/LogsPage"));
 
 function LoadingFallback() {
   return (
@@ -95,6 +96,15 @@ function App() {
           element={
             <ProtectedRoute>
               <ContentDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/logs"
+          element={
+            <ProtectedRoute>
+              <LogsPage />
             </ProtectedRoute>
           }
         />

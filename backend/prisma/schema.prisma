@@ -168,3 +168,22 @@ model MLModelMetric {
 
   @@map("ml_model_metrics")
 }
+
+enum LogLevel {
+  INFO
+  DEBUG
+  WARNING
+  ERROR
+}
+
+model SystemLog {
+  id        Int      @id @default(autoincrement())
+  level     LogLevel @default(INFO)
+  category  String
+  message   String
+  details   Json?
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("system_logs")
+}

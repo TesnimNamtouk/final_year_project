@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { ContentType, ContentStatus } from '@prisma/client';
 import { logActivity } from '../lib/activityLogger';
+import { systemLog } from '../lib/systemLogger';
 
 const router = Router();
 
@@ -85,6 +86,12 @@ router.post(
       });
 
       logActivity({ userId, action: 'add_to_list', entityType: 'content', entityId: content.id, metadata: { status, rating } });
+      systemLog({
+        userId,
+        category: 'USER_ACTION',
+        message: `Kullanıcı ${userId}, "${title}" (${type}, ${year ?? '?'}) içeriğini listesine ekledi. Durum: ${status}${rating != null ? `, Puan: ${rating}/10` : ''}.`,
+        details: { contentId: content.id, externalId, title, type, year, genres, status, rating },
+      });
 
       res.status(201).json({ data: userContent });
     } catch (err) {
@@ -162,7 +169,15 @@ router.patch(
         include: { content: true },
       });
 
-      if (rating !== undefined) logActivity({ userId, action: 'rate_content', entityType: 'content', entityId: existing.contentId, metadata: { rating } });
+      if (rating !== undefined) {
+        logActivity({ userId, action: 'rate_content', entityType: 'content', entityId: existing.contentId, metadata: { rating } });
+        systemLog({
+          userId,
+          category: 'USER_ACTION',
+          message: `Kullanıcı ${userId}, içerik #${existing.contentId} için ${rating != null ? `${rating}/10 puan verdi` : 'puanı kaldırdı'}. Bu puan ML modeline girdi olarak kullanılacak.`,
+          details: { contentId: existing.contentId, rating, previousRating: existing.rating, status },
+        });
+      }
 
       res.json({ data: updated });
     } catch (err) {
@@ -192,6 +207,12 @@ router.delete(
 
       await prisma.userContent.delete({ where: { id } });
       logActivity({ userId, action: 'remove_from_list', entityType: 'content', entityId: existing.contentId });
+      systemLog({
+        userId,
+        category: 'USER_ACTION',
+        message: `Kullanıcı ${userId}, içerik #${existing.contentId} öğesini listesinden çıkardı.`,
+        details: { contentId: existing.contentId, previousStatus: existing.status, previousRating: existing.rating },
+      });
 
       res.status(204).send();
     } catch (err) {

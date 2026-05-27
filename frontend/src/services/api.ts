@@ -163,4 +163,13 @@ export const usersAPI = {
     api.get(`/users/${id}/stats`),
 };
 
+// ─── Logs ─────────────────────────────────────────────────────────────────────
+
+export const logsAPI = {
+  get: (params?: { category?: string; limit?: number; offset?: number }) =>
+    api.get('/logs', { params }),
+
+  categories: () => api.get('/logs/categories'),
+};
+
 export default api;

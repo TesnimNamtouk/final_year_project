@@ -44,12 +44,14 @@ class HybridRecommender:
         preferred_genres: list[str] | None = None,
         top_n: int = 20,
         is_cold_start: bool = False,
-    ) -> list[dict]:
+    ) -> tuple[list[dict], dict]:
         """
         Generate top_n hybrid recommendations for the given user.
 
-        Returns list of dicts:
-            [{ content_id, hybrid_score, cbf_score, cf_score }, ...]
+        Returns:
+            (recommendations, log_details)
+            recommendations: [{ content_id, hybrid_score, cbf_score, cf_score }, ...]
+            log_details: dict with detailed calculation info for logging
         """
         # Adjust weights for cold-start users
         cbf_w = 0.9 if is_cold_start else self.cbf_weight
@@ -71,7 +73,7 @@ class HybridRecommender:
         candidate_ids = [cid for cid in all_content_ids if cid not in user_content_ids]
 
         if not candidate_ids:
-            return []
+            return [], {}
 
         cbf_scores = self.cbf.get_cbf_scores(user_content_ids, candidate_ids)
         cf_scores = self.cf.get_cf_scores(user_id, candidate_ids)
@@ -104,4 +106,53 @@ class HybridRecommender:
             )
 
         results.sort(key=lambda x: x["hybrid_score"], reverse=True)
-        return results[:top_n]
+        final = results[:top_n]
+
+        # Build log details for presentation
+        cbf_feature_count = (
+            self.cbf.content_matrix.shape[1]
+            if self.cbf.content_matrix is not None
+            else 0
+        )
+        cf_user_count = len(self.cf.user_ids) if self.cf.user_ids else 0
+        cf_item_count = len(self.cf.item_ids) if self.cf.item_ids else 0
+
+        top5 = [
+            {
+                "rank": i + 1,
+                "content_id": r["content_id"],
+                "hybrid_score": r["hybrid_score"],
+                "cbf_score": r["cbf_score"],
+                "cf_score": r["cf_score"],
+            }
+            for i, r in enumerate(final[:5])
+        ]
+
+        log_details = {
+            "weights": {
+                "cbf_weight": round(cbf_w, 4),
+                "cf_weight": round(cf_w, 4),
+                "genre_weight": round(genre_w, 4),
+            },
+            "is_cold_start": is_cold_start,
+            "preferred_genres": list(preferred_genres or []),
+            "user_content_count": len(user_content_ids),
+            "candidate_count": len(candidate_ids),
+            "cbf": {
+                "tfidf_features": cbf_feature_count,
+                "total_content_indexed": len(self.cbf.content_ids),
+                "user_items_used_for_profile": len(
+                    [cid for cid in user_content_ids if cid in self.cbf.content_ids]
+                ),
+            },
+            "cf": {
+                "user_item_matrix_users": cf_user_count,
+                "user_item_matrix_items": cf_item_count,
+                "knn_neighbors": self.cf.n_neighbors,
+                "user_in_matrix": user_id in self.cf.user_ids,
+            },
+            "top5_recommendations": top5,
+            "total_recommendations_returned": len(final),
+        }
+
+        return final, log_details

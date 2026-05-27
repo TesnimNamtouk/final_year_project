@@ -52,6 +52,7 @@ class RecommendResponse(BaseModel):
     recommendations: list[dict]
     algorithm: str
     count: int
+    log_details: dict = {}
 
 
 @app.get("/health")
@@ -84,23 +85,38 @@ def recommend(req: RecommendRequest):
             from db import get_user_preferences
             genres = get_user_preferences(req.user_id)
 
+        log_details: dict = {}
+
         if is_cold and genres:
             # Cold start: genre-based recommendation (no ML model needed)
             recs = cold_start.get_genre_based_content(
                 genres, all_contents, user_content_ids, req.top_n
             )
             algorithm = "cold_start_genre"
+            log_details = {
+                "algorithm": "cold_start_genre",
+                "is_cold_start": True,
+                "rating_count": rating_count,
+                "preferred_genres": genres,
+                "user_content_count": len(user_content_ids),
+                "candidate_count": len([c for c in all_contents if c["id"] not in user_content_ids]),
+                "total_recommendations_returned": len(recs),
+                "weights": {"cbf_weight": 0.0, "cf_weight": 0.0, "genre_weight": 1.0},
+            }
         else:
             # Normal flow: hybrid CBF + CF + genre boost
             recommender = HybridRecommender()
             recommender.fit(all_contents, all_ratings)
-            recs = recommender.recommend(
+            recs, log_details = recommender.recommend(
                 req.user_id, user_content_ids, all_contents,
                 preferred_genres=genres, top_n=req.top_n * 3, is_cold_start=is_cold
             )
+            log_details["rating_count"] = rating_count
             # Diversify: ensure balanced mix of movie / series / book
             recs = _diversify_by_type(recs, all_contents, req.top_n)
+            log_details["total_recommendations_returned"] = len(recs)
             algorithm = "cold_start_hybrid" if is_cold else "hybrid"
+            log_details["algorithm"] = algorithm
 
         # Persist recommendations
         if recs:
@@ -111,6 +127,7 @@ def recommend(req: RecommendRequest):
             recommendations=recs,
             algorithm=algorithm,
             count=len(recs),
+            log_details=log_details,
         )
 
     except Exception as e:

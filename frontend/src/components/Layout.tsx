@@ -21,6 +21,7 @@ import {
   Search as SearchIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
+  Assignment as LogsIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -156,6 +157,10 @@ export default function Layout({ children }: LayoutProps) {
                 <MenuItem onClick={handleProfileClick}>
                   <PersonIcon fontSize="small" sx={{ mr: 1 }} />
                   {t("nav.profile")}
+                </MenuItem>
+                <MenuItem onClick={() => { handleMenuClose(); navigate("/logs"); }}>
+                  <LogsIcon fontSize="small" sx={{ mr: 1 }} />
+                  Sistem Logları
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
