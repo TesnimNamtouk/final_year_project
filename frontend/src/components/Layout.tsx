@@ -158,10 +158,12 @@ export default function Layout({ children }: LayoutProps) {
                   <PersonIcon fontSize="small" sx={{ mr: 1 }} />
                   {t("nav.profile")}
                 </MenuItem>
-                <MenuItem onClick={() => { handleMenuClose(); navigate("/logs"); }}>
-                  <LogsIcon fontSize="small" sx={{ mr: 1 }} />
-                  Sistem Logları
-                </MenuItem>
+                {user?.isAdmin && (
+                  <MenuItem onClick={() => { handleMenuClose(); navigate("/admin"); }}>
+                    <LogsIcon fontSize="small" sx={{ mr: 1 }} />
+                    Admin Paneli
+                  </MenuItem>
+                )}
                 <MenuItem onClick={handleLogout}>
                   <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
                   {t("nav.logout")}

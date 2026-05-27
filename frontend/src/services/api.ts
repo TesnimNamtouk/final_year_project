@@ -172,4 +172,18 @@ export const logsAPI = {
   categories: () => api.get('/logs/categories'),
 };
 
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+export const adminAPI = {
+  stats: () => api.get('/admin/stats'),
+
+  users: () => api.get('/admin/users'),
+
+  logs: (params?: { category?: string; userId?: number; limit?: number; offset?: number }) =>
+    api.get('/admin/logs', { params }),
+
+  recommendationLogs: (params?: { limit?: number; offset?: number }) =>
+    api.get('/admin/recommendation-logs', { params }),
+};
+
 export default api;

@@ -13,6 +13,7 @@ import contentRouter from './routes/content';
 import userContentRouter from './routes/userContent';
 import recommendationsRouter from './routes/recommendations';
 import logsRouter from './routes/logs';
+import adminRouter from './routes/admin';
 
 dotenv.config();
 
@@ -107,6 +108,7 @@ app.use('/api/content', contentRouter);
 app.use('/api/user-content', userContentRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/logs', logsRouter);
+app.use('/api/admin', adminRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {

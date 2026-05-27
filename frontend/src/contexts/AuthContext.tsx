@@ -11,6 +11,7 @@ export interface AuthUser {
   phone?: string | null;
   avatarUrl?: string | null;
   onboardingDone?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface AuthContextType {

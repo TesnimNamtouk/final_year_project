@@ -12,6 +12,11 @@ import {
 import { logActivity } from '../lib/activityLogger';
 import { systemLog } from '../lib/systemLogger';
 
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((e) => e.trim())
+  .filter(Boolean);
+
 const router = Router();
 
 // ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -155,7 +160,8 @@ router.get(
       }
 
       const { preferences, ...userFields } = user;
-      res.json({ data: { ...userFields, onboardingDone: preferences?.onboardingDone ?? false } });
+      const isAdmin = ADMIN_EMAILS.includes(userFields.email);
+      res.json({ data: { ...userFields, onboardingDone: preferences?.onboardingDone ?? false, isAdmin } });
     } catch (err) {
       next(err);
     }

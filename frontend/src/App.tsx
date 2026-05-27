@@ -13,6 +13,7 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const ContentDetailPage = lazy(() => import("./pages/ContentDetailPage"));
 const LogsPage = lazy(() => import("./pages/LogsPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 
 function LoadingFallback() {
   return (
@@ -37,6 +38,16 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
   if (!user.onboardingDone && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
+  return children;
+}
+
+// Admin route: only admins can access
+function AdminRoute({ children }: { children: JSX.Element }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <LoadingFallback />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.isAdmin) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
@@ -106,6 +117,16 @@ function App() {
             <ProtectedRoute>
               <LogsPage />
             </ProtectedRoute>
+          }
+        />
+
+        {/* Admin route — no Layout wrapper, completely separate */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
           }
         />
 
